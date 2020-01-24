@@ -1,8 +1,8 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/zricethezav/gitleaks/audit"
@@ -75,12 +75,15 @@ func main() {
 // take place -- this is similar to running `git diff` on all the tracked files.
 func Run(m *manager.Manager) error {
 	if m.Opts.Disk {
-		dir, err := ioutil.TempDir("", "gitleaks")
-		defer os.RemoveAll(dir)
+		newpath := filepath.Join(".", "public")
+		//err := os.MkdirAll("./gitleaks-checkout", os.ModePerm)
+		//	dir, err := ioutil.TempDir("", "gitleaks")
+		//defer os.RemoveAll(dir)
+		err := os.MkdirAll(newpath, os.ModePerm)
 		if err != nil {
 			return err
 		}
-		m.CloneDir = dir
+		m.CloneDir = newpath
 	}
 
 	var err error

@@ -93,23 +93,20 @@ func (g *Github) Audit() {
 	for _, repo := range githubRepos {
 		r := audit.NewRepo(&g.manager)
 		r.Name = *repo.Name
-		err := r.Clone(&git.CloneOptions{
-			URL: *repo.CloneURL,
+
+		auth, err := options.SSHAuth(g.manager.Opts)
+		if err != nil {
+			log.Warnf("unable to get ssh auth, skipping clone and audit for repo %s: %+v\n", *repo.CloneURL, err)
+		}
+		err = r.Clone(&git.CloneOptions{
+			URL:   *repo.SSHURL,
+			Auth:  auth,
+			Depth: 1,
 		})
 		if err != nil {
-			log.Warn("unable to clone via https and access token, attempting with ssh now")
-			auth, err := options.SSHAuth(g.manager.Opts)
-			if err != nil {
-				log.Warnf("unable to get ssh auth, skipping clone and audit for repo %s: %+v\n", *repo.CloneURL, err)
-			}
-			err = r.Clone(&git.CloneOptions{
-				URL:  *repo.SSHURL,
-				Auth: auth,
-			})
-			if err != nil {
-				log.Warnf("err cloning %s, skipping clone and audit: %+v\n", *repo.SSHURL, err)
-			}
+			log.Warnf("err cloning %s, skipping clone and audit: %+v\n", *repo.SSHURL, err)
 		}
+
 		if err = r.Audit(); err != nil {
 			log.Warn(err)
 		}
